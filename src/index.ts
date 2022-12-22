@@ -74,8 +74,7 @@ class Grid {
           .move(x * (this.dx + this.ox), y * (this.dy + this.oy))
           .attr({ fill: "#f06" }) as Cell
 
-        // initial pattern
-        if (y === 4) {
+        if (y == 5 && x % 2 == 0) {
           rect.active = 1
         } else {
           rect.active = 0
@@ -92,7 +91,7 @@ class Grid {
   draw(): void {
     this.cells.forEach((row) => {
       row.forEach((cell) => {
-        if (cell.active == 0) {
+        if (!cell.active) {
           cell.attr({ fill: "#efefef" })
         } else {
           cell.attr({ fill: "#f06" })
@@ -118,10 +117,12 @@ class Grid {
         if (i === 0 && j === 0) {
           continue
         }
-        if (nx <= 0 || ny < 0 || nx >= this.nx || ny >= this.ny) {
-          count++
-        } else if (this.cells[ny][nx].active) {
-          count++
+        try {
+          if (this.cells[ny][nx].active) {
+            count++
+          }
+        } catch (e) {
+          continue
         }
       }
     }
@@ -135,7 +136,7 @@ class Grid {
         const activeNeighbors = this.countActiveNeighbors(x, y)
 
         if (cell.active) {
-          if (activeNeighbors < 2 || activeNeighbors > 3) {
+          if (activeNeighbors < 3 || activeNeighbors > 3) {
             cell.active = 0
           } else if (activeNeighbors == 3) {
             cell.active = 1
@@ -151,9 +152,10 @@ class Grid {
 }
 
 const grid = new Grid(16, 9)
+grid.draw()
 const synth = new Tone.Synth().toDestination()
 const range = Scale.rangeOf("C pentatonic")("C4", "C6")
-const line = svg
+const columnHighlighter = svg
   .rect(grid.dx, grid.ny * (grid.dy + grid.oy))
   .attr({ fill: hsl2hex(150, 100, 50), opacity: 0.2 })
 
@@ -168,11 +170,12 @@ async function run() {
     }
 
     const x = i % grid.nx
+    // simulate another CA step at the beginning of a cycle
     if (x == 0) {
       grid.simulate()
     }
 
-    line.move(x * (grid.dx + grid.ox), 0)
+    columnHighlighter.move(x * (grid.dx + grid.ox), 0)
 
     grid.draw()
 
@@ -182,7 +185,9 @@ async function run() {
         notes.push(range[y % range.length] as string)
       }
     })
+
     const now = Tone.now()
+
     notes.forEach((note, i) => {
       synth.triggerAttackRelease(note, "8n", now + i * 0.01)
     })
