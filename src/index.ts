@@ -8,7 +8,6 @@ var svg = SVG()
   .size(900, 400)
 
 let active = false
-
 const btn = document.createElement("button")
 btn.innerHTML = "Toggle"
 btn.onclick = function toggleActive() {
@@ -22,13 +21,15 @@ sleepSlider.type = "range"
 sleepSlider.min = "100"
 sleepSlider.max = "500"
 sleepSlider.value = sleepValue.toFixed(1)
-
 sleepSlider.onmouseup = function changeSleepValue(e: MouseEvent) {
   sleepValue = e.target?.value
 }
 
 document.body.appendChild(sleepSlider)
 
+/**
+ *
+ */
 class Grid {
   nx: number
   dx: number
@@ -39,16 +40,26 @@ class Grid {
 
   cells: Rect[][]
 
-  constructor(x: number, y: number) {
-    this.nx = x
-    this.ny = y
-    this.dx = 25
-    this.ox = 2
-    this.dy = 25
-    this.oy = 2
+  /**
+   *
+   * @param nx number of cells horizontally
+   * @param ny number of cells vertically
+   * @param dx width of a cell
+   * @param dy height of a cell
+   * @param ox horizontal padding between cells
+   * @param oy vertical padding between cells
+   */
+  constructor(nx: number, ny: number, dx = 25, dy = 25, ox = 2, oy = 2) {
+    this.nx = nx
+    this.ny = ny
+    this.dx = dx
+    this.ox = ox
+    this.dy = dy
+    this.oy = oy
 
     this.cells = []
 
+    // initialize grid cells
     for (let y = 0; y < this.ny; y++) {
       this.cells[y] = []
       for (let x = 0; x < this.nx; x++) {
@@ -56,17 +67,23 @@ class Grid {
           .rect(this.dx, this.dy)
           .move(x * (this.dx + this.ox), y * (this.dy + this.oy))
           .attr({ fill: "#f06" })
+
+        // initial pattern
         if (y === 4) {
           rect.active = 1
         } else {
           rect.active = 0
         }
+
         this.cells[y][x] = rect
       }
     }
   }
 
-  draw() {
+  /**
+   * Draw all cells in grid based on their active status.
+   */
+  draw(): void {
     this.cells.forEach((row) => {
       row.forEach((cell) => {
         if (cell.active == 0) {
@@ -78,7 +95,14 @@ class Grid {
     })
   }
 
-  getNeighbors(x: number, y: number): number {
+  /**
+   * Get number of active neighboring cells in grid.
+   *
+   * @param x horizontal coordinate in grid
+   * @param y vertical coordinate in grid
+   * @returns number of active neighbors
+   */
+  countActiveNeighbors(x: number, y: number): number {
     let count = 0
 
     for (let j = -1; j < 2; j++) {
@@ -102,7 +126,7 @@ class Grid {
   simulate() {
     this.cells.forEach((row, y) => {
       row.forEach((cell, x) => {
-        const activeNeighbors = this.getNeighbors(x, y)
+        const activeNeighbors = this.countActiveNeighbors(x, y)
 
         if (cell.active) {
           if (activeNeighbors < 2 || activeNeighbors > 3) {
@@ -146,11 +170,9 @@ async function run() {
 
     grid.draw()
 
-    let playSound: number[] = []
     let notes: string[] = []
     grid.cells.forEach((row, y) => {
       if (row[x].active) {
-        playSound.push(row[x].active)
         notes.push(range[y % range.length] as string)
       }
     })
