@@ -21,11 +21,17 @@ sleepSlider.type = "range"
 sleepSlider.min = "100"
 sleepSlider.max = "500"
 sleepSlider.value = sleepValue.toFixed(1)
-sleepSlider.onmouseup = function changeSleepValue(e: MouseEvent) {
-  sleepValue = e.target?.value
+sleepSlider.onmouseup = function changeSleepValue(e: MouseEvent): void {
+  const value = (e.target as HTMLInputElement).value
+  if (!value) return
+  sleepValue = Number(value)
 }
 
 document.body.appendChild(sleepSlider)
+
+interface Cell extends Rect {
+  active: number
+}
 
 /**
  *
@@ -38,7 +44,7 @@ class Grid {
   dy: number
   oy: number
 
-  cells: Rect[][]
+  cells: Cell[][]
 
   /**
    *
@@ -66,7 +72,7 @@ class Grid {
         const rect = svg
           .rect(this.dx, this.dy)
           .move(x * (this.dx + this.ox), y * (this.dy + this.oy))
-          .attr({ fill: "#f06" })
+          .attr({ fill: "#f06" }) as Cell
 
         // initial pattern
         if (y === 4) {
